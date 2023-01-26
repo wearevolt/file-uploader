@@ -4,7 +4,7 @@ const { UploaderFactory } = require('./uploader');
 const { GDriveAdapter } = require('./store-adapter/gdrive');
 
 program
-  .name('gdrive-uploader')
+  .name('file-uploader')
   .description('Upload a file to an external store');
 
 program
