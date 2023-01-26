@@ -2,27 +2,55 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
-const dotenv = require('dotenv');
+const config = require('../config');
 const { StreamProcessor } = require('./stream-processor');
+const { ConfigError, UploadUrlError, FolderError, TeamDriveError } = require('../errors');
 
-dotenv.config();
+function envs() {
+  const chunkSize = config.CHUNK_SIZE;
+  if (!chunkSize) {
+    throw new ConfigError('Set up CHUNK_SIZE');
+  } else if (chunkSize % (256 * 1024) !== 0) {
+    throw new ConfigError('The chunk size must be multiples of 256Kb');
+  }
 
-const CHUNK_SIZE = 256 * 1024 * 100; // must be multiples of 256Kb
+  const teamDriveName = config.GDRIVE_TEAMDRIVE_NAME;
+  if (!teamDriveName) {
+    throw new ConfigError('Set up GDRIVE_TEAMDRIVE_NAME');
+  }
 
-class UploadUrlError extends Error {}
+  const clientEmail = config.GDRIVE_CLIENT_EMAIL;
+  if (!clientEmail) {
+    throw new ConfigError('Set up GDRIVE_CLIENT_EMAIL');
+  }
+
+  const privateKey = config.GDRIVE_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new ConfigError('Set up GDRIVE_PRIVATE_KEY');
+  }
+
+  return {
+    teamDriveName,
+    clientEmail,
+    privateKey,
+    chunkSize,
+  };
+}
 
 class GDriveAdapter {
   static async createAdapter() {
-    const teamDriveName = (process.env.GDRIVE_TEAMDRIVE_NAME || '').trim();
-    if (!teamDriveName) {
-      throw new Error('Set up GDRIVE_TEAMDRIVE_NAME');
-    }
-
-    const client_email = process.env.GDRIVE_CLIENT_EMAIL;
-    const private_key = process.env.GDRIVE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    const {
+      teamDriveName,
+      clientEmail,
+      privateKey,
+      chunkSize,
+    } = envs();
 
     const auth = await google.auth.getClient({
-      credentials: { client_email, private_key },
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey,
+      },
       scopes: 'https://www.googleapis.com/auth/drive',
     });
 
@@ -31,19 +59,21 @@ class GDriveAdapter {
       auth,
     });
 
-    const jwt = this.gdriveJWT(client_email, private_key);
+    const jwt = this.gdriveJWT(clientEmail, privateKey);
 
     return new GDriveAdapter(
       client,
       teamDriveName,
       jwt,
+      chunkSize,
     );
   }
 
-  constructor(client, teamDriveName, jwt) {
+  constructor(client, teamDriveName, jwt, chunkSize) {
     this.client = client;
     this.teamDriveName = teamDriveName;
     this.jwt = jwt;
+    this.chunkSize = chunkSize;
   }
 
   async uploadResumableFile(
@@ -75,7 +105,10 @@ class GDriveAdapter {
       parents: [folderId],
     });
 
-    const processor = new StreamProcessor(fileStream, CHUNK_SIZE);
+    const processor = new StreamProcessor(
+      fileStream,
+      this.chunkSize,
+    );
 
     processor.process(async (
       startByte,
@@ -177,7 +210,7 @@ class GDriveAdapter {
     const { drives } = result.data;
 
     if (drives.length === 0) {
-      throw new Error(`'${this.teamDriveName}' drive is absent`);
+      throw new TeamDriveError(`'${this.teamDriveName}' drive is absent`);
     }
 
     return drives[0].id;
@@ -186,7 +219,7 @@ class GDriveAdapter {
   splitFoldersList(folderPath) {
     let _folderPath = (folderPath || '').trim();
     if (!_folderPath) {
-      throw new Error('The folder path is necessary');
+      throw new FolderError('The folder path is necessary');
     }
 
     _folderPath = _folderPath.replace(/^\//, '');
@@ -204,7 +237,7 @@ class GDriveAdapter {
 
     const folderName = folders[idx];
     if (!folderName) {
-      throw new Error('The folder name is empty');
+      throw new FolderError('The folder name is empty');
     }
 
     const q = [
@@ -226,9 +259,9 @@ class GDriveAdapter {
 
     const foundFolders = result.data.files;
     if (foundFolders.length === 0) {
-      throw new Error(`${currentFolderName} is absent`);
+      throw new FolderError(`${currentFolderName} is absent`);
     } else if (foundFolders.length > 1) {
-      throw new Error(`${currentFolderName} exists more than one`);
+      throw new FolderError(`${currentFolderName} exists more than one`);
     }
 
     const _folderId = foundFolders[0].id;
