@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
 const config = require('../config');
-const { StreamProcessor } = require('./stream-processor');
+const { StreamProcessor } = require('../stream-processor');
 const { splitFoldersList } = require('../util');
 
 const {
