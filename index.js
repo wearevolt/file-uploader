@@ -3,18 +3,26 @@ const { program } = require('commander');
 const { UploaderFactory } = require('./uploader');
 const { GDriveAdapter } = require('./store-adapter/gdrive');
 
-program
-  .name('file-uploader')
-  .description('Upload a file to an external store');
+const readJson = require('read-package-json');
 
-program
-  .arguments('<local_file_path> <remote_folder_path>')
-  .action(async (localFilePath, remoteFilePath) => {
-    const adapter = await GDriveAdapter.createAdapter();
+const run = (pkgJson) => {
+  program
+    .name(pkgJson.name)
+    .description(pkgJson.description);
 
-    await UploaderFactory
-      .createUploader(adapter)
-      .uploadFile(localFilePath, remoteFilePath);
-  });
+  program
+    .arguments('<local_file_path> <remote_folder_path>')
+    .action(async (localFilePath, remoteFilePath) => {
+      const adapter = await GDriveAdapter.createAdapter();
 
-program.parse();
+      await UploaderFactory
+        .createUploader(adapter)
+        .uploadFile(localFilePath, remoteFilePath);
+    });
+
+  program.parse();
+};
+
+readJson('./package.json', console.error, false, (err, pkgJson) => {
+  run(pkgJson);
+});
