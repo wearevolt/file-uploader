@@ -1,9 +1,9 @@
 const path = require('path');
-const stream = require('stream');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
 const dotenv = require('dotenv');
+const { StreamProcessor } = require('./stream-processor');
 
 dotenv.config();
 
@@ -75,106 +75,35 @@ class GDriveAdapter {
       parents: [folderId],
     });
 
-    const streamTrans = new stream.Transform({
-      transform: function (chunk, _, callback) {
-        callback(null, chunk);
-      },
-    });
+    const processor = new StreamProcessor(fileStream, CHUNK_SIZE);
 
-    fileStream.pipe(streamTrans);
+    processor.process(async (
+      startByte,
+      dataChunk,
+    ) => (
+      new Promise((resolve, reject) => {
+        const range = `${startByte} - ${startByte + dataChunk.length - 1}/${fileSize}`
+        console.log(`uploading ${range}`);
 
-    return new Promise((resolve, reject) => {
-      let bufs = [];
-      let startByte = 0;
-
-      streamTrans.on("data", async (chunk) => {
-        bufs.push(chunk);
-
-        const temp = Buffer.concat(bufs);
-
-        if (temp.length >= CHUNK_SIZE) {
-          const dataChunk = Uint8Array.prototype.slice.call(temp, 0, CHUNK_SIZE)
-          const left = Uint8Array.prototype.slice.call(temp, CHUNK_SIZE);
-
-          streamTrans.pause();
-
-          let upcount = 0;
-
-          const upload = function () {
-            const range = `${startByte} - ${startByte + dataChunk.length - 1}/${fileSize}`
-            console.log(`uploading ${range}`);
-
-            axios({
-              method: "PUT",
-              url: uploadUrl,
-              headers: {
-                "Content-Range": `bytes ${range}`,
-              },
-              data: dataChunk,
-            }).then(({ data }) => (
-              resolve(data)
-            )).catch((err) => {
-              if (err.response && err.response.status == 308) {
-                startByte += dataChunk.length;
-                streamTrans.resume();
-                return;
-              }
-
-              if (upcount == 3) {
-                reject(err);
-                return;
-              }
-
-              upcount++;
-              console.log("Retry");
-              upload();
-              return;
-            });
-          };
-
-          upload();
-          bufs = [left];
-        }
-      });
-
-      streamTrans.on("end", () => {
-        const dataChunk = Buffer.concat(bufs);
-
-        if (dataChunk.length > 0) {
-          let upcount = 0;
-
-          const upload = function () {
-            const range = `${startByte} - ${startByte + dataChunk.length - 1}/${fileSize}`
-            console.log(`uploading ${range}`);
-
-            axios({
-              method: "PUT",
-              url: uploadUrl,
-              headers: {
-                "Content-Range": `bytes ${range}`,
-              },
-              data: dataChunk,
-            }).then(({ data }) => (
-              resolve(data)
-            )).catch((err) => {
-              if (upcount == 3) {
-                reject(err);
-                return;
-              }
-
-              upcount++;
-              console.log("Retry");
-              upload();
-              return;
-            });
-          };
-
-          upload();
-        }
-      });
-
-      streamTrans.on("error", (err) => reject(err));
-    });
+        axios({
+          method: "PUT",
+          url: uploadUrl,
+          headers: {
+            "Content-Range": `bytes ${range}`,
+          },
+          data: dataChunk,
+        }).then(({ data }) => (
+          resolve(data)
+        )).catch((err) => {
+          if (err.response && err.response.status == 308) {
+            resolve();
+          } else {
+            console.log("Retry");
+            reject(err);
+          }
+        });
+      })
+    ));
   }
 
   async createResumableUploadUrl(queryOptions = {}, fileMetadata = {}) {
