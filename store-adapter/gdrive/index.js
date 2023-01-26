@@ -4,7 +4,7 @@ const axios = require('axios');
 const { google } = require('googleapis');
 const envs = require('./envs');
 const { StreamProcessor } = require('../../stream-processor');
-const { splitFoldersList } = require('../../util');
+const { splitPathToFoldersList } = require('../../util');
 
 const {
   UploadUrlError,
@@ -66,7 +66,7 @@ class GDriveAdapter {
     const folderId = await this.searchFolderId(
       teamDriveId,
       teamDriveId,
-      splitFoldersList(folderPath),
+      splitPathToFoldersList(folderPath),
       0,
     );
 

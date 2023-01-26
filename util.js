@@ -1,6 +1,6 @@
 const { FolderError } = require('./errors');
 
-function splitFoldersList(folderPath) {
+function splitPathToFoldersList(folderPath) {
   let _folderPath = (folderPath || '').trim();
   if (!_folderPath) {
     throw new FolderError('The folder path is necessary');
@@ -15,5 +15,5 @@ function splitFoldersList(folderPath) {
 };
 
 module.exports = {
-  splitFoldersList,
+  splitPathToFoldersList,
 };
