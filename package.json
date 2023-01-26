@@ -1,6 +1,29 @@
 {
-  "name": "gdrive-uploader",
-  "version": "1.0.0",
+  "name": "file-uploader",
+  "description": "Upload a file to a remote store",
+  "version": "0.0.1",
+  "author": {
+    "name": "Viacheslav Voytovich",
+    "email": "voytovich.slava@gmail.com"
+  },
+  "license": "UNLICENSED",
+  "os": [
+    "linux"
+  ],
+  "engines": {
+    "node": ">=12.22.12"
+  },
+  "private": "true",
   "main": "index.js",
-  "license": "MIT"
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "dependencies": {
+    "axios": "1.2.3",
+    "commander": "10.0.0",
+    "dotenv": "16.0.3",
+    "googleapis": "110.0.0",
+    "jsonwebtoken": "9.0.0",
+    "moment": "2.29.4"
+  }
 }
