@@ -4,7 +4,14 @@ const axios = require('axios');
 const { google } = require('googleapis');
 const config = require('../config');
 const { StreamProcessor } = require('./stream-processor');
-const { ConfigError, UploadUrlError, FolderError, TeamDriveError } = require('../errors');
+const { splitFoldersList } = require('../util');
+
+const {
+  ConfigError,
+  UploadUrlError,
+  FolderError,
+  TeamDriveError,
+} = require('../errors');
 
 function envs() {
   const chunkSize = config.CHUNK_SIZE;
@@ -91,7 +98,7 @@ class GDriveAdapter {
     const folderId = await this.searchFolderId(
       teamDriveId,
       teamDriveId,
-      this.splitFoldersList(folderPath),
+      splitFoldersList(folderPath),
       0,
     );
 
@@ -214,20 +221,6 @@ class GDriveAdapter {
     }
 
     return drives[0].id;
-  }
-
-  splitFoldersList(folderPath) {
-    let _folderPath = (folderPath || '').trim();
-    if (!_folderPath) {
-      throw new FolderError('The folder path is necessary');
-    }
-
-    _folderPath = _folderPath.replace(/^\//, '');
-    if (!_folderPath) {
-      return [];
-    }
-
-    return _folderPath.split('/');
   }
 
   async searchFolderId(teamDriveId, folderId, folders, idx) {
