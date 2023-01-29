@@ -1,5 +1,5 @@
 const { AdapterError } = require('../errors');
-const { GDriveAdapter } = require('./store-adapter/gdrive');
+const { GDriveAdapter } = require('./gdrive');
 
 class StoreAdapter {
   static async createAdapter(options) {

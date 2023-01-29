@@ -9,8 +9,9 @@ const run = (pkgJson) => {
   program.name(pkgJson.name).description(pkgJson.description);
 
   program
-    .arguments('<local_file_path> <remote_folder_path>')
-    .options('--gdrive', 'Upload on Google Drive')
+    .argument('<local_file_path>', 'The path of the local file')
+    .argument('<remote_folder_path>', 'The path of the remote folder')
+    .option('--gdrive', 'to upload on Google Drive')
     .action(async (localFilePath, remoteFilePath, options) => {
       const adapter = await StoreAdapter.createAdapter(options);
 
