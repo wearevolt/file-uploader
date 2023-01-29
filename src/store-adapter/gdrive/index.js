@@ -9,8 +9,8 @@ const { splitPathToFoldersList } = require('../../util');
 const { UploadUrlError, FolderError, TeamDriveError } = require('../../errors');
 
 class GDriveAdapter {
-  static async createAdapter() {
-    const { teamDriveName, clientEmail, privateKey, chunkSize } = envs();
+  static async createAdapter(options) {
+    const { teamDriveName, clientEmail, privateKey, chunkSize } = envs(options);
 
     const auth = await google.auth.getClient({
       credentials: {

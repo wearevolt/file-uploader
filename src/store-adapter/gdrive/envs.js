@@ -2,33 +2,42 @@ const config = require('../../config');
 
 const { ConfigError } = require('../../errors');
 
-function envs() {
-  const chunkSize = config.CHUNK_SIZE;
+function envs(options) {
+  const chunkSize = options.gdriveChunkSize || config.FILE_UPLOADER_GDRIVE_CHUNK_SIZE;
   if (!chunkSize) {
-    throw new ConfigError('Set up CHUNK_SIZE');
+    throw new ConfigError(
+      'Use --gdrive-chunk-size or set up FILE_UPLOADER_GDRIVE_CHUNK_SIZE',
+    );
   } else if (chunkSize % (256 * 1024) !== 0) {
     throw new ConfigError('The chunk size must be multiples of 256Kb');
   }
 
-  const teamDriveName = config.GDRIVE_TEAMDRIVE_NAME;
+  const teamDriveName =
+    options.gdriveTeamdriveName || config.FILE_UPLOADER_GDRIVE_TEAMDRIVE_NAME;
   if (!teamDriveName) {
-    throw new ConfigError('Set up GDRIVE_TEAMDRIVE_NAME');
+    throw new ConfigError(
+      'Use --gdrive-teamdrive-name or set up FILE_UPLOADER_GDRIVE_TEAMDRIVE_NAME',
+    );
   }
 
-  const clientEmail = config.GDRIVE_CLIENT_EMAIL;
+  const clientEmail = options.gdriveClientEmail || config.FILE_UPLOADER_GDRIVE_CLIENT_EMAIL;
   if (!clientEmail) {
-    throw new ConfigError('Set up GDRIVE_CLIENT_EMAIL');
+    throw new ConfigError(
+      'Use --gdrive-client-email or set up FILE_UPLOADER_GDRIVE_CLIENT_EMAIL',
+    );
   }
 
-  const privateKey = config.GDRIVE_PRIVATE_KEY;
+  const privateKey = options.gdrivePrivateKey || config.FILE_UPLOADER_GDRIVE_PRIVATE_KEY;
   if (!privateKey) {
-    throw new ConfigError('Set up GDRIVE_PRIVATE_KEY');
+    throw new ConfigError(
+      'Use --gdrive-private-key or set up FILE_UPLOADER_GDRIVE_PRIVATE_KEY',
+    );
   }
 
   return {
     teamDriveName,
     clientEmail,
-    privateKey,
+    privateKey: privateKey.replace(/\\n/g, '\n'),
     chunkSize,
   };
 }
