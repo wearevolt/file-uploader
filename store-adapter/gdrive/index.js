@@ -6,20 +6,11 @@ const envs = require('./envs');
 const { StreamProcessor } = require('../../stream-processor');
 const { splitPathToFoldersList } = require('../../util');
 
-const {
-  UploadUrlError,
-  FolderError,
-  TeamDriveError,
-} = require('../../errors');
+const { UploadUrlError, FolderError, TeamDriveError } = require('../../errors');
 
 class GDriveAdapter {
   static async createAdapter() {
-    const {
-      teamDriveName,
-      clientEmail,
-      privateKey,
-      chunkSize,
-    } = envs();
+    const { teamDriveName, clientEmail, privateKey, chunkSize } = envs();
 
     const auth = await google.auth.getClient({
       credentials: {
@@ -36,12 +27,7 @@ class GDriveAdapter {
 
     const jwt = this.gdriveJWT(clientEmail, privateKey);
 
-    return new GDriveAdapter(
-      client,
-      teamDriveName,
-      jwt,
-      chunkSize,
-    );
+    return new GDriveAdapter(client, teamDriveName, jwt, chunkSize);
   }
 
   constructor(client, teamDriveName, jwt, chunkSize) {
@@ -51,15 +37,8 @@ class GDriveAdapter {
     this.chunkSize = chunkSize;
   }
 
-  async uploadResumableFile(
-    remoteFilePath,
-    fileStream,
-    fileSize,
-  ) {
-    const {
-      dir: folderPath,
-      base: fileName,
-    } = path.parse(remoteFilePath);
+  async uploadResumableFile(remoteFilePath, fileStream, fileSize) {
+    const { dir: folderPath, base: fileName } = path.parse(remoteFilePath);
 
     const teamDriveId = await this.getTeamDriveId();
 
@@ -70,48 +49,48 @@ class GDriveAdapter {
       0,
     );
 
-    const uploadUrl = await this.createResumableUploadUrl({
-      includeItemsFromAllDrives: true,
-      corpora: 'drive',
-      supportsAllDrives: true,
-      driveId: teamDriveId,
-    }, {
-      name: fileName,
-      parents: [folderId],
-    });
-
-    const processor = new StreamProcessor(
-      fileStream,
-      this.chunkSize,
+    const uploadUrl = await this.createResumableUploadUrl(
+      {
+        includeItemsFromAllDrives: true,
+        corpora: 'drive',
+        supportsAllDrives: true,
+        driveId: teamDriveId,
+      },
+      {
+        name: fileName,
+        parents: [folderId],
+      },
     );
 
-    processor.process(async (
-      startByte,
-      dataChunk,
-    ) => (
-      new Promise((resolve, reject) => {
-        const range = `${startByte} - ${startByte + dataChunk.length - 1}/${fileSize}`
-        console.log(`uploading ${range}`);
+    const processor = new StreamProcessor(fileStream, this.chunkSize);
 
-        axios({
-          method: "PUT",
-          url: uploadUrl,
-          headers: {
-            "Content-Range": `bytes ${range}`,
-          },
-          data: dataChunk,
-        }).then(({ data }) => (
-          resolve(data)
-        )).catch((err) => {
-          if (err.response && err.response.status == 308) {
-            resolve();
-          } else {
-            console.log("Retry");
-            reject(err);
-          }
-        });
-      })
-    ));
+    processor.process(
+      async (startByte, dataChunk) =>
+        new Promise((resolve, reject) => {
+          const range = `${startByte} - ${
+            startByte + dataChunk.length - 1
+          }/${fileSize}`;
+          console.log(`uploading ${range}`);
+
+          axios({
+            method: 'PUT',
+            url: uploadUrl,
+            headers: {
+              'Content-Range': `bytes ${range}`,
+            },
+            data: dataChunk,
+          })
+            .then(({ data }) => resolve(data))
+            .catch((err) => {
+              if (err.response && err.response.status == 308) {
+                resolve();
+              } else {
+                console.log('Retry');
+                reject(err);
+              }
+            });
+        }),
+    );
   }
 
   async createResumableUploadUrl(queryOptions = {}, fileMetadata = {}) {
@@ -148,7 +127,9 @@ class GDriveAdapter {
       throw new UploadUrlError(JSON.stringify(urlResult));
     }
 
-    const { headers: { location } } = urlResult;
+    const {
+      headers: { location },
+    } = urlResult;
 
     return location;
   }
@@ -170,16 +151,12 @@ class GDriveAdapter {
       },
     };
 
-    return jwt.sign(
-      payload,
-      privateKey,
-      options,
-    );
+    return jwt.sign(payload, privateKey, options);
   }
 
   async getTeamDriveId() {
     const result = await this.client.drives.list({
-      q: `name = '${this.teamDriveName}'`
+      q: `name = '${this.teamDriveName}'`,
     });
 
     const { drives } = result.data;
@@ -227,12 +204,7 @@ class GDriveAdapter {
 
     const _folderId = foundFolders[0].id;
 
-    return this.searchFolderId(
-      teamDriveId,
-      _folderId,
-      folders,
-      idx + 1,
-    );
+    return this.searchFolderId(teamDriveId, _folderId, folders, idx + 1);
   }
 }
 

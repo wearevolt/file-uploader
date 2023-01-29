@@ -26,5 +26,8 @@
     "jsonwebtoken": "9.0.0",
     "moment": "2.29.4",
     "read-package-json": "6.0.0"
+  },
+  "devDependencies": {
+    "prettier": "2.8.3"
   }
 }

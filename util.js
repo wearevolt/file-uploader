@@ -12,7 +12,7 @@ function splitPathToFoldersList(folderPath) {
   }
 
   return _folderPath.split('/');
-};
+}
 
 module.exports = {
   splitPathToFoldersList,
