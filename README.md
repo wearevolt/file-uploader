@@ -12,16 +12,16 @@ Run
 ---
 
 ``` bash
-$ file-uploader <adapter options> <local file> <remote folder>
+$ file-uploader <options> <local file> <remote folder>
 ```
 
-local file - the path of the local file to upload
-remote folder - the path to a folder inside the shared folder
+* local file - the path of the local file to upload
+* remote folder - the path to a folder inside the shared folder
 
-### adapter options
+### options
 --gdrive - to upload files on Google Drive
 
-## Adapters
+## Adapter settings
 
 ### Google Drive
 

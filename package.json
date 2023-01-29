@@ -1,5 +1,5 @@
 {
-  "name": "file-uploader",
+  "name": "@slavav/file-uploader",
   "description": "Upload a file to a remote store",
   "version": "0.0.1",
   "author": {
