@@ -1,7 +1,7 @@
 const { program } = require('commander');
 
 const { UploaderFactory } = require('./uploader');
-const { GDriveAdapter } = require('./store-adapter/gdrive');
+const { StoreAdapter } = require('./store-adapter');
 
 const readJson = require('read-package-json');
 
@@ -10,8 +10,9 @@ const run = (pkgJson) => {
 
   program
     .arguments('<local_file_path> <remote_folder_path>')
-    .action(async (localFilePath, remoteFilePath) => {
-      const adapter = await GDriveAdapter.createAdapter();
+    .options('--gdrive', 'Upload on Google Drive')
+    .action(async (localFilePath, remoteFilePath, options) => {
+      const adapter = await StoreAdapter.createAdapter(options);
 
       await UploaderFactory.createUploader(adapter).uploadFile(
         localFilePath,
