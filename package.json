@@ -6,15 +6,18 @@
     "name": "Viacheslav Voytovich",
     "email": "voytovich.slava@gmail.com"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "os": [
     "linux"
   ],
   "engines": {
-    "node": ">=12.22.12"
+    "node": ">= 12.22.12"
   },
-  "private": "true",
-  "main": "index.js",
+  "main": "src/index",
+  "bin": "src/index",
+  "files": [
+    "src"
+  ],
   "scripts": {
     "start": "node ./index.js"
   },
