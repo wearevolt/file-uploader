@@ -24,6 +24,6 @@ const run = (pkgJson) => {
   program.parse();
 };
 
-readJson('./package.json', console.error, false, (err, pkgJson) => {
+readJson('../package.json', console.error, false, (err, pkgJson) => {
   run(pkgJson);
 });

@@ -5,7 +5,7 @@ Install
 -------
 
 ``` bash
-$ yarn add file-uploader
+$ yarn add @slavav/file-uploader
 ```
 
 Run

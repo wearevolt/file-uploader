@@ -18,7 +18,7 @@
     "node": ">= 12.22.12"
   },
   "main": "src/index",
-  "bin": "src/index.js",
+  "bin": "src/cli.js",
   "files": [
     "src"
   ],
