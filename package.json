@@ -6,6 +6,10 @@
     "name": "Viacheslav Voytovich",
     "email": "voytovich.slava@gmail.com"
   },
+  "repository": {
+    "url": "https://github.com/Vslava/file-uploader",
+    "type": "git"
+  },
   "license": "MIT",
   "os": [
     "linux"
