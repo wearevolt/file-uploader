@@ -2,7 +2,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
-const envs = require('./envs');
+const config = require('./config');
 const { StreamProcessor } = require('../../stream-processor');
 const { splitPathToFoldersList } = require('../../util');
 
@@ -10,7 +10,7 @@ const { UploadUrlError, FolderError, TeamDriveError } = require('../../errors');
 
 class GDriveAdapter {
   static async createAdapter(options) {
-    const { teamDriveName, clientEmail, privateKey, chunkSize } = envs(options);
+    const { teamDriveName, clientEmail, privateKey, chunkSize } = config(options);
 
     const auth = await google.auth.getClient({
       credentials: {
