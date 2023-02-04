@@ -5,12 +5,14 @@ const { google } = require('googleapis');
 const config = require('./config');
 const { StreamProcessor } = require('../../stream-processor');
 const { splitPathToFoldersList } = require('../../util');
+const container = require('../../container');
 
 const { UploadUrlError, FolderError, TeamDriveError } = require('../../errors');
 
 class GDriveAdapter {
   static async createAdapter(options) {
-    const { teamDriveName, clientEmail, privateKey, chunkSize } = config(options);
+    const { teamDriveName, clientEmail, privateKey, chunkSize } =
+      config(options);
 
     const auth = await google.auth.getClient({
       credentials: {
@@ -35,6 +37,8 @@ class GDriveAdapter {
     this.teamDriveName = teamDriveName;
     this.jwt = jwt;
     this.chunkSize = chunkSize;
+
+    this.logger = container.resolve('logger');
   }
 
   async uploadResumableFile(remoteFilePath, fileStream, fileSize) {
@@ -67,10 +71,9 @@ class GDriveAdapter {
     processor.process(
       async (startByte, dataChunk) =>
         new Promise((resolve, reject) => {
-          const range = `${startByte} - ${
-            startByte + dataChunk.length - 1
-          }/${fileSize}`;
-          console.log(`uploading ${range}`);
+          const finishByte = startByte + dataChunk.length - 1;
+          const range = `${startByte} - ${finishByte}/${fileSize}`;
+          this.logger.debug(`uploading ${range}`);
 
           axios({
             method: 'PUT',
@@ -85,7 +88,7 @@ class GDriveAdapter {
               if (err.response && err.response.status == 308) {
                 resolve();
               } else {
-                console.log('Retry');
+                this.logger.debug('Retry', err.message);
                 reject(err);
               }
             });

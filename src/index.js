@@ -1,8 +1,11 @@
 const path = require('path');
 const { program } = require('commander');
 
+const container = require('./container');
+
 const { UploaderFactory } = require('./uploader');
 const { StoreAdapter } = require('./store-adapter');
+const { AppError } = require('./errors');
 
 const readJson = require('read-package-json');
 
@@ -10,7 +13,7 @@ const run = (pkgJson) => {
   program.name('file-uploader').description(pkgJson.description);
 
   program
-    .argument('<type>', 'The type of the uploading')
+    .argument('<type>', 'The type of the uploading (gdrive)')
     .argument('<local_file_path>', 'The path of the local file')
     .argument('<remote_folder_path>', 'The path of the remote folder')
     .option(
@@ -29,13 +32,29 @@ const run = (pkgJson) => {
       '--gdrive-chunk-size <size>',
       'The size of a chunk for uploading. The size must be multiples of 256Kb',
     )
+    .option(
+      '--debug',
+      'Show more log messages',
+    )
     .action(async (uploaderType, localFilePath, remoteFilePath, options) => {
-      const adapter = await StoreAdapter.createAdapter(uploaderType, options);
+      const logger = new Logger(options.debug);
 
-      await UploaderFactory.createUploader(adapter).uploadFile(
-        localFilePath,
-        remoteFilePath,
-      );
+      container.register('logger', logger);
+
+      try {
+        const adapter = await StoreAdapter.createAdapter(uploaderType, options);
+
+        await UploaderFactory.createUploader(adapter).uploadFile(
+          localFilePath,
+          remoteFilePath,
+        );
+      } catch (err) {
+        if (err instanceof AppError) {
+          logger.error(err.message);
+        } else {
+          throw err;
+        }
+      }
     });
 
   program.parse();
