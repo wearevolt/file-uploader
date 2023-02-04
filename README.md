@@ -5,7 +5,7 @@ Install
 -------
 
 ``` bash
-$ yarn add @slavav/file-uploader
+$ yarn add git@github.com:wearevolt/file-uploader.git
 ```
 
 Run
@@ -29,7 +29,7 @@ where you upload files.
 
 options:
 
-* --gdrive-teamdrive-name - the name of the gdrive teamdrive (or set up FILE_UPLOADER_GDRIVE_TEAMDRIVE_NAME)
-* --gdrive-client-email - the client email of the service account (or set up FILE_UPLOADER_GDRIVE_CLIENT_EMAIL)
-* --gdrive-private-key - the private key of the service account (or set up FILE_UPLOADER_GDRIVE_PRIVATE_KEY)
-* --gdrive-chunk-size - the size of a chunk for uploading. The size must be multiples of 256Kb (or set up FILE_UPLOADER_GDRIVE_CHUNK_SIZE)
+* --gdrive-teamdrive - The name of the gdrive teamdrive (or set up FILE_UPLOADER_GDRIVE_TEAMDRIVE)
+* --gdrive-client-email - The client email of the service account (or set up FILE_UPLOADER_GDRIVE_CLIENT_EMAIL)
+* --gdrive-private-key - The private key of the service account (or set up FILE_UPLOADER_GDRIVE_PRIVATE_KEY)
+* --gdrive-chunks - The number of chunks for uploading at a time. The one chunk size is 256Kb (or set up FILE_UPLOADER_GDRIVE_CHUNKS)
