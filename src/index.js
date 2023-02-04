@@ -52,6 +52,7 @@ const run = (pkgJson) => {
       } catch (err) {
         if (err instanceof AppError) {
           logger.error(err.message);
+          process.exit(1);
         } else {
           throw err;
         }
