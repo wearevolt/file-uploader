@@ -30,8 +30,8 @@ const run = (pkgJson) => {
       'The private key of the service account. All newlines must be replaced by "\\n"',
     )
     .option(
-      '--gdrive-chunk-size <size>',
-      'The size of a chunk for uploading. The size must be multiples of 256Kb',
+      '--gdrive-chunks <count>',
+      'The number of chunks for uploading at a time. The one chunk size is 256Kb',
     )
     .option(
       '--debug',

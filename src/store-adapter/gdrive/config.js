@@ -3,13 +3,11 @@ const config = require('../../config');
 const { ConfigError } = require('../../errors');
 
 function envs(options) {
-  const chunkSize = options.gdriveChunkSize || config.FILE_UPLOADER_GDRIVE_CHUNK_SIZE;
-  if (!chunkSize) {
+  const chunksAmount = options.gdriveChunks || config.FILE_UPLOADER_GDRIVE_CHUNKS;
+  if (!chunksAmount) {
     throw new ConfigError(
-      'Use --gdrive-chunk-size or set up FILE_UPLOADER_GDRIVE_CHUNK_SIZE',
+      'Use --gdrive-chunks or set up FILE_UPLOADER_GDRIVE_CHUNKS',
     );
-  } else if (chunkSize % (256 * 1024) !== 0) {
-    throw new ConfigError('The chunk size must be multiples of 256Kb');
   }
 
   const teamDriveName =
@@ -38,7 +36,7 @@ function envs(options) {
     teamDriveName,
     clientEmail,
     privateKey: privateKey.replace(/\\n/g, '\n'),
-    chunkSize,
+    chunkSize: chunksAmount * 256 * 1024,
   };
 }
 
