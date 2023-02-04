@@ -54,16 +54,9 @@ class GDriveAdapter {
     );
 
     const uploadUrl = await this.createResumableUploadUrl(
-      {
-        includeItemsFromAllDrives: true,
-        corpora: 'drive',
-        supportsAllDrives: true,
-        driveId: teamDriveId,
-      },
-      {
-        name: fileName,
-        parents: [folderId],
-      },
+      teamDriveId,
+      fileName,
+      folderId,
     );
 
     const processor = new StreamProcessor(fileStream, this.chunkSize);
@@ -96,7 +89,7 @@ class GDriveAdapter {
     );
   }
 
-  async createResumableUploadUrl(queryOptions = {}, fileMetadata = {}) {
+  async createResumableUploadUrl(teamDriveId, fileName, parentFolderId) {
     const tokenResult = await axios({
       method: 'POST',
       url: 'https://oauth2.googleapis.com/token',
@@ -118,12 +111,20 @@ class GDriveAdapter {
     const urlResult = await axios({
       method: 'POST',
       url: 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
-      params: queryOptions,
+      params: {
+        includeItemsFromAllDrives: true,
+        corpora: 'drive',
+        supportsAllDrives: true,
+        driveId: teamDriveId,
+      },
       headers: {
         Authorization: `Bearer ${access_token}`,
         'Content-Type': 'application/json',
       },
-      data: JSON.stringify(fileMetadata),
+      data: JSON.stringify({
+        name: fileName,
+        parents: [parentFolderId],
+      }),
     });
 
     if (urlResult.status !== 200) {
