@@ -17,3 +17,7 @@ class Logger {
     console.error('[Error]', ...msgs);
   }
 }
+
+module.exports = {
+  Logger,
+};

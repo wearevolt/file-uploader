@@ -6,6 +6,7 @@ const container = require('./container');
 const { UploaderFactory } = require('./uploader');
 const { StoreAdapter } = require('./store-adapter');
 const { AppError } = require('./errors');
+const { Logger } = require('./logger');
 
 const readJson = require('read-package-json');
 
