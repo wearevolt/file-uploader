@@ -1,5 +1,5 @@
 {
-  "name": "@slavav/file-uploader",
+  "name": "file-uploader",
   "description": "Upload a file to a remote store",
   "version": "0.0.1",
   "author": {
@@ -11,14 +11,10 @@
     "type": "git"
   },
   "license": "MIT",
-  "os": [
-    "linux"
-  ],
   "engines": {
     "node": ">= 12.22.12"
   },
-  "main": "src/index",
-  "bin": "src/cli.js",
+  "bin": "./src/cli.js",
   "files": [
     "src"
   ],
