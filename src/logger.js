@@ -1,3 +1,5 @@
+const APP_PREFIX = '[FILE UPLOADER]';
+
 class Logger {
   constructor(isDebug = false) {
     this.isDebug = isDebug;
@@ -5,16 +7,20 @@ class Logger {
 
   debug(...msg) {
     if (this.isDebug) {
-      console.debug('[Debug]', ...msg);
+      this.console('debug', '[Debug]', ...msg);
     }
   }
 
   log(...msgs) {
-    console.log('[Log]', ...msgs);
+    this.console('log', '[Log]', ...msgs);
   }
 
   error(...msgs) {
-    console.error('[Error]', ...msgs);
+    this.console('error', '[Error]', ...msgs);
+  }
+
+  console(method, ...args) {
+    console[method](APP_PREFIX, ...args);
   }
 }
 
