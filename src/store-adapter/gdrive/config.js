@@ -13,10 +13,10 @@ function envs(options) {
   }
 
   const teamDriveName =
-    options.gdriveTeamdriveName || config.FILE_UPLOADER_GDRIVE_TEAMDRIVE_NAME;
+    options.gdriveTeamdrive || config.FILE_UPLOADER_GDRIVE_TEAMDRIVE;
   if (!teamDriveName) {
     throw new ConfigError(
-      'Use --gdrive-teamdrive-name or set up FILE_UPLOADER_GDRIVE_TEAMDRIVE_NAME',
+      'Use --gdrive-teamdrive or set up FILE_UPLOADER_GDRIVE_TEAMDRIVE',
     );
   }
 

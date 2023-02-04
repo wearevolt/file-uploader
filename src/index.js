@@ -17,7 +17,7 @@ const run = (pkgJson) => {
     .argument('<local_file_path>', 'The path of the local file')
     .argument('<remote_folder_path>', 'The path of the remote folder')
     .option(
-      '--gdrive-teamdrive-name <name>',
+      '--gdrive-teamdrive <name>',
       'The name of the gdrive teamdrive',
     )
     .option(
