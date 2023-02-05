@@ -13,10 +13,7 @@ program
   .argument('<type>', 'The type of the uploading (gdrive)')
   .argument('<local_file_path>', 'The path of the local file')
   .argument('<remote_folder_path>', 'The path of the remote folder')
-  .option(
-    '--gdrive-teamdrive <name>',
-    'The name of the gdrive teamdrive',
-  )
+  .option('--gdrive-teamdrive <name>', 'The name of the gdrive teamdrive')
   .option(
     '--gdrive-client-email <email>',
     'The client email of the service account',
@@ -29,10 +26,7 @@ program
     '--gdrive-chunks <count>',
     'The number of chunks for uploading at a time. The one chunk size is 256Kb',
   )
-  .option(
-    '--debug',
-    'Show more log messages',
-  )
+  .option('--debug', 'Show more log messages')
   .action(async (uploaderType, localFilePath, remoteFilePath, options) => {
     const logger = new Logger(options.debug);
 
