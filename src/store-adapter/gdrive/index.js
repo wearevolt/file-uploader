@@ -9,6 +9,12 @@ const container = require('../../container');
 
 const { UploadUrlError, FolderError, TeamDriveError } = require('../../errors');
 
+const API_COMMON_OPTIONS = {
+  includeItemsFromAllDrives: true,
+  corpora: 'drive',
+  supportsAllDrives: true,
+};
+
 class GDriveAdapter {
   static async createAdapter(options) {
     const { teamDriveName, clientEmail, privateKey, chunkSize } =
@@ -46,7 +52,7 @@ class GDriveAdapter {
 
     const teamDriveId = await this.getTeamDriveId();
 
-    const folderId = await this.searchFolderId(
+    const folderId = await this.searchOrCreateRemoteFolderAndReturnId(
       teamDriveId,
       teamDriveId,
       splitPathToFoldersList(folderPath),
@@ -112,9 +118,7 @@ class GDriveAdapter {
       method: 'POST',
       url: 'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
       params: {
-        includeItemsFromAllDrives: true,
-        corpora: 'drive',
-        supportsAllDrives: true,
+        ...API_COMMON_OPTIONS,
         driveId: teamDriveId,
       },
       headers: {
@@ -172,7 +176,19 @@ class GDriveAdapter {
     return drives[0].id;
   }
 
-  async searchFolderId(teamDriveId, folderId, folders, idx) {
+  async createFolder(teamDriveId, parentFolderId, folderName) {
+    return this.client.files.create({
+      ...API_COMMON_OPTIONS,
+      driveId: teamDriveId,
+      resource: {
+        mimeType: 'application/vnd.google-apps.folder',
+        name: folderName,
+        parents: [parentFolderId],
+      },
+    });
+  }
+
+  async searchOrCreateRemoteFolderAndReturnId(teamDriveId, folderId, folders, idx) {
     if (idx >= folders.length) {
       return folderId;
     }
@@ -190,25 +206,28 @@ class GDriveAdapter {
     ].join(' and ');
 
     const result = await this.client.files.list({
+      ...API_COMMON_OPTIONS,
       driveId: teamDriveId,
       q,
-      includeItemsFromAllDrives: true,
-      corpora: 'drive',
-      supportsAllDrives: true,
     });
 
     const currentFolderName = `/${folders.slice(0, idx + 1).join('/')}`;
 
     const foundFolders = result.data.files;
-    if (foundFolders.length === 0) {
-      throw new FolderError(`${currentFolderName} is absent`);
-    } else if (foundFolders.length > 1) {
+    let _folderId;
+
+    if (foundFolders.length === 1) {
+      _folderId = foundFolders[0].id;
+    } else if (foundFolders.length === 0) {
+      this.logger.debug(`Creating a folder: ${currentFolderName}`);
+
+      const createResult = await this.createFolder(teamDriveId, folderId, folderName);
+      _folderId = createResult.data.id;
+    } else {
       throw new FolderError(`${currentFolderName} exists more than one`);
     }
 
-    const _folderId = foundFolders[0].id;
-
-    return this.searchFolderId(teamDriveId, _folderId, folders, idx + 1);
+    return this.searchOrCreateRemoteFolderAndReturnId(teamDriveId, _folderId, folders, idx + 1);
   }
 }
 
