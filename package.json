@@ -1,7 +1,7 @@
 {
   "name": "file-uploader",
   "description": "Upload a file to a remote store",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Viacheslav Voytovich",
     "email": "voytovich.slava@gmail.com"
