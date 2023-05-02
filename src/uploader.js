@@ -8,11 +8,9 @@ class Uploader {
   async uploadFile(localFilePath, remoteFilePath) {
     const { size } = await fs.promises.stat(localFilePath);
 
-    const fileStream = fs.createReadStream(localFilePath);
-
     await this.storeAdapter.uploadResumableFile(
       remoteFilePath,
-      fileStream,
+      localFilePath,
       size,
     );
   }

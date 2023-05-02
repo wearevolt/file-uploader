@@ -1,9 +1,9 @@
+const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { google } = require('googleapis');
 const config = require('./config');
-const { StreamProcessor } = require('../../stream-processor');
 const { splitPathToFoldersList } = require('../../util');
 const container = require('../../container');
 
@@ -47,7 +47,28 @@ class GDriveAdapter {
     this.logger = container.resolve('logger');
   }
 
-  async uploadResumableFile(remoteFilePath, fileStream, fileSize) {
+  async axiosUpload(uploadUrl, range, data) {
+    for (let i = 0; i < 3; i += 1) {
+      try {
+        return await axios({
+          method: 'PUT',
+          url: uploadUrl,
+          headers: {
+            'Content-Range': `bytes ${range}`,
+          },
+          data,
+        });
+      } catch (err) {
+        if (err.response && err.response.status == 308) {
+          return {};
+        }
+
+        this.logger.debug('Retry', err.message);
+      }
+    }
+  }
+
+  async uploadResumableFile(remoteFilePath, localFilePath, fileSize) {
     const { dir: folderPath, base: fileName } = path.parse(remoteFilePath);
 
     const teamDriveId = await this.getTeamDriveId();
@@ -65,34 +86,33 @@ class GDriveAdapter {
       folderId,
     );
 
-    const processor = new StreamProcessor(fileStream, this.chunkSize);
+    let startPos = 0;
 
-    processor.process(
-      async (startByte, dataChunk) =>
-        new Promise((resolve, reject) => {
-          const finishByte = startByte + dataChunk.length - 1;
-          const range = `${startByte} - ${finishByte}/${fileSize}`;
-          this.logger.debug(`uploading ${range}`);
+    while (true) {
+      const endPos = (fileSize - startPos) < this.chunkSize
+        ? fileSize - 1
+        : startPos + this.chunkSize - 1;
 
-          axios({
-            method: 'PUT',
-            url: uploadUrl,
-            headers: {
-              'Content-Range': `bytes ${range}`,
-            },
-            data: dataChunk,
-          })
-            .then(({ data }) => resolve(data))
-            .catch((err) => {
-              if (err.response && err.response.status == 308) {
-                resolve();
-              } else {
-                this.logger.debug('Retry', err.message);
-                reject(err);
-              }
-            });
-        }),
-    );
+      const fileStream = fs.createReadStream(localFilePath, {
+        start: startPos,
+        end: endPos,
+      });
+
+      const range = `${startPos} - ${endPos}/${fileSize}`;
+      this.logger.debug(`uploading ${range}`);
+
+      const result = await this.axiosUpload(
+        uploadUrl,
+        range,
+        fileStream,
+      );
+
+      if (result.data) {
+        break;
+      }
+
+      startPos += this.chunkSize;
+    }
   }
 
   async createResumableUploadUrl(teamDriveId, fileName, parentFolderId) {
